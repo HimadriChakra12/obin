@@ -13,15 +13,21 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <netdb.h>
 
-#define HOSTS 4
 #define TIMEOUT_MS 1000
 
-static const char *ips[HOSTS] = {
+static const char *hosts[] = {
     "1.1.1.1",
-    "8.8.8.8",
     "9.9.9.9",
+    "discord.com",
+    "instagram.com",
+    "google.com",
     "208.67.222.222"
+};
+
+enum {
+    HOSTS = (int)(sizeof(hosts) / sizeof(hosts[0]))
 };
 
 static unsigned short checksum(void *b, int len)
@@ -64,9 +70,18 @@ int main(void)
     struct timespec sent[HOSTS];
 
     for (int i = 0; i < HOSTS; i++) {
+        struct addrinfo hints = {0}, *res;
+
         memset(&addr[i], 0, sizeof(addr[i]));
-        addr[i].sin_family = AF_INET;
-        inet_pton(AF_INET, ips[i], &addr[i].sin_addr);
+        hints.ai_family = AF_INET;
+
+        if (getaddrinfo(hosts[i], NULL, &hints, &res) != 0) {
+            fprintf(stderr, "Cannot resolve %s\n", hosts[i]);
+            continue;
+        }
+
+        memcpy(&addr[i], res->ai_addr, sizeof(struct sockaddr_in));
+        freeaddrinfo(res);
     }
 
     while (1) {

@@ -1,23 +1,23 @@
 CC      = clang
-CFLAGS  = -Wall -Wextra -Os -flto
-PREFIX  ?= /usr/local
-BD  = $(PREFIX)/bin
+CFLAGS  = -Wall -Wextra -Wpedantic -O2 -flto
+PREFIX ?= /usr/local
+BINDIR  = $(PREFIX)/bin
 BIN     = sping
 
-.PHONY: all build install uninstall clean
+.PHONY: all install uninstall clean
 
-all: build
+all: $(BIN)
 
-build:
-	$(CC) $(CFLAGS) $(BIN).c -o $(BIN)
+$(BIN): $(BIN).c
+	$(CC) $(CFLAGS) $< -o $@
+	strip $@
 
-install: build
-	strip $(BIN)
-	install -Dm755 $(BIN) $(BD)/$(BIN)
-	setcap cap_net_raw+ep $(BD)/$(BIN)
+install: $(BIN)
+	install -Dm755 $(BIN) $(BINDIR)/$(BIN)
+	setcap cap_net_raw+ep $(BINDIR)/$(BIN)
 
 uninstall:
-	rm -f $(BD)/$(BIN)
+	rm -f $(BINDIR)/$(BIN)
 
 clean:
 	rm -f $(BIN)
